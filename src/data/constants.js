@@ -60,55 +60,73 @@ export const MOCK_ACCOUNTS = [
   },
 ];
 
-// ─── بيانات الجمعيات المتاحة (12 جمعية) ──────────────────────────────────────
+// ─── بيانات الجمعيات المتاحة ──────────────────────────────────────
+// الحالات: 'open' (مفتوحة) | 'completed' (مكتملة مع مؤقت 24 ساعة)
 export const MOCK_SALAFAT = [
+  // 🟢 مجموعات مفتوحة — تظهر في Browse
   {
     id: 1,  amount: 5_000_000,  duration: 10, filled: 7,
     priorityTaken: [true, true, false], startDate: '2025-05-01',
-  },
-  {
-    id: 2,  amount: 10_000_000, duration: 18, filled: 12,
-    priorityTaken: [true, false, false], startDate: '2025-05-01',
+    status: 'open', completedAt: null,
   },
   {
     id: 3,  amount: 1_000_000,  duration: 10, filled: 9,
     priorityTaken: [true, true, true],  startDate: '2025-04-15',
+    status: 'open', completedAt: null,
   },
   {
     id: 4,  amount: 500_000,    duration: 10, filled: 5,
     priorityTaken: [false, false, false], startDate: '2025-05-15',
+    status: 'open', completedAt: null,
   },
   {
     id: 5,  amount: 20_000_000, duration: 24, filled: 8,
     priorityTaken: [true, true, false], startDate: '2025-06-01',
+    status: 'open', completedAt: null,
   },
+
+  // 🔵 مجموعات مكتملة — تختفي من Browse، يظهر مؤقت 24 ساعة
+  {
+    id: 2,  amount: 10_000_000, duration: 18, filled: 18,
+    priorityTaken: [true, true, true], startDate: '2025-05-01',
+    status: 'completed', completedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 9,  amount: 5_000_000, duration: 10, filled: 10,
+    priorityTaken: [true, true, true], startDate: '2025-04-01',
+    status: 'completed', completedAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+  },
+
+  // 🟢 مجموعات مفتوحة — تظهر في Browse (تابع)
   {
     id: 6,  amount: 15_000_000, duration: 18, filled: 14,
     priorityTaken: [true, true, true],  startDate: '2025-04-01',
+    status: 'open', completedAt: null,
   },
   {
     id: 7,  amount: 5_000_000,  duration: 18, filled: 16,
     priorityTaken: [true, false, false], startDate: '2025-05-01',
+    status: 'open', completedAt: null,
   },
   {
     id: 8,  amount: 25_000_000, duration: 24, filled: 2,
     priorityTaken: [false, false, false], startDate: '2025-07-01',
-  },
-  {
-    id: 9,  amount: 10_000_000, duration: 10, filled: 9,
-    priorityTaken: [true, true, true],  startDate: '2025-04-01',
+    status: 'open', completedAt: null,
   },
   {
     id: 10, amount: 1_000_000,  duration: 18, filled: 10,
     priorityTaken: [true, false, false], startDate: '2025-05-01',
+    status: 'open', completedAt: null,
   },
   {
     id: 11, amount: 5_000_000,  duration: 24, filled: 20,
     priorityTaken: [true, true, true],  startDate: '2025-03-01',
+    status: 'open', completedAt: null,
   },
   {
     id: 12, amount: 15_000_000, duration: 24, filled: 18,
     priorityTaken: [true, true, false], startDate: '2025-04-01',
+    status: 'open', completedAt: null,
   },
 ];
 
@@ -198,4 +216,41 @@ export function seatsLeft(salafa) {
 /** المقاعد ذات الأولوية المتاحة */
 export function availablePrioritySeats(salafa) {
   return salafa.priorityTaken.map((taken, i) => ({ seat: i + 1, taken })).filter(s => !s.taken);
+}
+
+// ─── دوال دورة حياة المجموعة ─────────────────────────────────────────────────
+
+/** حساب الوقت المتبقي للمؤقت 24 ساعة (بالدقائق) */
+export function getTimerRemaining(completedAt) {
+  if (!completedAt) return 0;
+  const elapsed = Date.now() - new Date(completedAt).getTime();
+  const remaining = (24 * 60 * 60 * 1000) - elapsed;
+  return Math.max(0, Math.round(remaining / 60000)); // بالدقائق
+}
+
+/** تنسيق الوقت المتبقي: 1440 دقيقة → "24 ساعة" / "12 س و 30 د" */
+export function formatTimeRemaining(mins) {
+  if (mins <= 0) return 'انتهى';
+  const hours = Math.floor(mins / 60);
+  const minutes = mins % 60;
+  if (hours > 0 && minutes > 0) return `${hours} س و ${minutes} د`;
+  if (hours > 0) return `${hours} ساعة`;
+  return `${minutes} دقيقة`;
+}
+
+/** التحقق إذا تجاوزت 24 ساعة (انتقال لحالة جديدة) */
+export function isTimeoutExpired(completedAt) {
+  if (!completedAt) return false;
+  const elapsed = Date.now() - new Date(completedAt).getTime();
+  return elapsed > 24 * 60 * 60 * 1000;
+}
+
+/** تصفية الجمعيات حسب الحالة */
+export function filterByStatus(salafat, status) {
+  return salafat.filter(s => s.status === status);
+}
+
+/** الجمعيات المفتوحة والجديدة فقط (لصفحة Browse) */
+export function getDisplaySalafat(salafat) {
+  return salafat.filter(s => s.status === 'open' || s.status === 'new');
 }

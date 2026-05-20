@@ -4,6 +4,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        /* ── الثيم الداكن القديم ── */
         bg:    '#0a0f0d',
         bg2:   '#111a15',
         bg3:   '#162019',
@@ -18,6 +19,13 @@ export default {
         t1:    '#e8fff5',
         t2:    '#8ab8a0',
         t3:    '#4a7a60',
+        /* ── الثيم الفاتح الجديد ── */
+        navy:    '#0f172a',
+        primary: '#4f46e5',
+        brand:   '#4f46e5',
+      },
+      borderRadius: {
+        card: '1rem',
       },
       fontFamily: {
         arabic: ['Tajawal', 'sans-serif'],

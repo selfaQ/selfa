@@ -10,7 +10,7 @@ export default function Login() {
 
   function handleSelect(account) {
     login(account);
-    navigate('/dashboard');
+    navigate('/browse');
   }
 
   return (

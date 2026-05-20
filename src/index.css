@@ -27,7 +27,8 @@
     border-right: 1px solid rgba(63,255,162,0.15);
     box-shadow: 0 0 40px rgba(63,255,162,0.06);
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 }
 
@@ -53,4 +54,18 @@
   /* دوران — مؤشر التحميل */
   .spin { animation: spin 1.2s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* نص بتدرج لوني */
+  .text-gradient {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* بطاقة مقفولة */
+  .locked-card {
+    opacity: 0.55;
+    filter: grayscale(0.4);
+  }
 }
