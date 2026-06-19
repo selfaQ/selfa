@@ -46,12 +46,6 @@ export const MOCK_NOTIFICATIONS = [
     time: 'منذ ساعتين', unread: true,
   },
   {
-    id: 2, type: 'info',
-    title: 'طلب كفالة',
-    body: 'KI-9921-4400 يطلب كفالتك',
-    time: 'منذ 3 ساعات', unread: true,
-  },
-  {
     id: 3, type: 'success',
     title: 'دورك القادم',
     body: 'تذكير: دورك شهر نوفمبر 2025',

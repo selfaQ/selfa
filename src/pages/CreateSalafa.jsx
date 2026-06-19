@@ -1,4 +1,4 @@
-// إنشاء جمعية ذاتية — معالج 5 خطوات
+﻿// إنشاء جمعية ذاتية — معالج 5 خطوات
 
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -59,11 +59,11 @@ function Step2({ data, setData }) {
   function addMember() {
     if (!input.trim()) return;
     if (data.members.length >= maxMembers - 1) { setErr('وصلت للحد الأقصى من الأعضاء'); return; }
-    if (!input.startsWith('770')) { setErr('رقم ki Card غير صحيح (يجب أن يبدأ بـ 770)'); return; }
+    if (!input.startsWith('770')) { setErr('رقم Qi Card غير صحيح (يجب أن يبدأ بـ 770)'); return; }
     setErr('');
     setData(d => ({
       ...d,
-      members: [...d.members, { id: Date.now(), kiCard: input, status: 'pending', name: `عضو ${d.members.length + 2}` }],
+      members: [...d.members, { id: Date.now(), qicard: input, status: 'pending', name: `عضو ${d.members.length + 2}` }],
     }));
     setInput('');
   }
@@ -84,7 +84,7 @@ function Step2({ data, setData }) {
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
-          placeholder="رقم ki Card"
+          placeholder="رقم Qi Card"
           className="flex-1 border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:border-primary"
           dir="ltr"
           onKeyDown={e => e.key === 'Enter' && addMember()}
@@ -112,7 +112,7 @@ function Step2({ data, setData }) {
             <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 text-xs">👤</div>
             <div className="flex-1">
               <p className="text-sm font-semibold text-slate-700">{m.name}</p>
-              <p className="text-xs text-slate-400 font-mono" dir="ltr">{m.kiCard}</p>
+              <p className="text-xs text-slate-400 font-mono" dir="ltr">{m.qicard}</p>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full">في الانتظار</span>

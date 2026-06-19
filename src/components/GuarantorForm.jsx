@@ -1,19 +1,19 @@
-// نموذج الكفيل — للحسابات الشخصية فقط (غير الموظفين)
+﻿// نموذج الكفيل — للحسابات الشخصية فقط (غير الموظفين)
 
 import { useState } from 'react';
 
 export default function GuarantorForm({ onConfirm }) {
-  const [kiCard, setKiCard]     = useState('');
+  const [qicard, setqicard]     = useState('');
   const [status, setStatus]     = useState('idle'); // idle | searching | found | rejected
   const [guarantor, setGuarantor] = useState(null);
 
   // محاكاة البحث عن الكفيل
   function handleSearch() {
-    if (!kiCard.trim()) return;
+    if (!qicard.trim()) return;
     setStatus('searching');
 
     setTimeout(() => {
-      if (kiCard.startsWith('770')) {
+      if (qicard.startsWith('770')) {
         // محاكاة: وجد كفيلاً حكومياً
         setGuarantor({ name: 'علي حسن الموسوي', type: 'موظف حكومي', salary: '1,800,000 د.ع' });
         setStatus('found');
@@ -34,7 +34,7 @@ export default function GuarantorForm({ onConfirm }) {
         <p className="text-sm font-bold text-amber-800">مطلوب كفيل حكومي</p>
       </div>
       <p className="text-xs text-amber-700 mb-3">
-        بما أن حسابك شخصي، يلزمك كفيل موظف حكومي. أدخل رقم بطاقته ki Card:
+        بما أن حسابك شخصي، يلزمك كفيل موظف حكومي. أدخل رقم بطاقته Qi Card:
       </p>
 
       {/* حقل الإدخال */}
@@ -42,15 +42,15 @@ export default function GuarantorForm({ onConfirm }) {
         <input
           type="text"
           placeholder="مثال: 7701-XXXX-XXXX"
-          value={kiCard}
-          onChange={e => setKiCard(e.target.value)}
+          value={qicard}
+          onChange={e => setqicard(e.target.value)}
           disabled={status === 'searching' || status === 'found'}
           className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary"
           dir="ltr"
         />
         <button
           onClick={handleSearch}
-          disabled={status === 'searching' || status === 'found' || !kiCard}
+          disabled={status === 'searching' || status === 'found' || !qicard}
           className="px-4 py-2 bg-amber-500 text-white text-sm font-semibold rounded-lg disabled:opacity-50 hover:bg-amber-600 transition"
         >
           {status === 'searching' ? '...' : 'بحث'}

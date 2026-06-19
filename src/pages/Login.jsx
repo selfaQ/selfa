@@ -1,84 +1,184 @@
-// صفحة تسجيل الدخول — اختيار حساب ki Card بدون كلمة مرور
+﻿// تسجيل الدخول والتسجيل
 
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { MOCK_ACCOUNTS, formatIQD } from '../data/constants';
+import useStore from '../store/useStore';
+import { loginUser, registerUser } from '../api/auth';
+
+const INPUT = {
+  width: '100%',
+  padding: '12px 14px',
+  borderRadius: '12px',
+  border: '1px solid rgba(14,165,114,0.25)',
+  background: '#ffffff',
+  color: '#0d1f17',
+  fontSize: '13px',
+  outline: 'none',
+  direction: 'rtl',
+};
 
 export default function Login() {
-  const { login } = useAuth();
-  const navigate  = useNavigate();
+  const navigate = useNavigate();
+  const setAuth  = useStore(s => s.setAuth);
 
-  function handleSelect(account) {
-    login(account);
-    navigate('/browse');
+  const [tab,      setTab]      = useState('login');   // 'login' | 'register'
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState('');
+
+  // حقول مشتركة
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+
+  // حقول التسجيل فقط
+  const [fullName, setFullName] = useState('');
+  const [phone,    setPhone]    = useState('');
+  const [salary,   setSalary]   = useState('');
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    if (!username.trim() || !password) return;
+    setError('');
+    setLoading(true);
+    try {
+      const res = await loginUser(username.trim(), password);
+      setAuth({ token: res.token, username: res.username, salary: 0, expiresAt: res.expiresAt });
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    if (!username.trim() || !password || !fullName.trim() || !phone.trim() || !salary) return;
+    setError('');
+    setLoading(true);
+    try {
+      const res = await registerUser({
+        username:     username.trim(),
+        password,
+        fullName:     fullName.trim(),
+        phoneNumber:  phone.trim(),
+        salaryAmount: Number(salary),
+      });
+      setAuth({
+        token:      res.token,
+        username:   res.username,
+        fullName:   fullName.trim(),
+        salary:     Number(salary),
+        expiresAt:  res.expiresAt,
+      });
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col page-enter">
+    <div className="min-h-screen flex flex-col page-enter" style={{ background: '#f4f9f6' }}>
 
-      {/* رأس الصفحة */}
-      <div className="bg-brand px-5 pt-8 pb-12 text-white text-center">
-        <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-          <span className="text-white font-black text-2xl">Q</span>
+      {/* رأس */}
+      <div className="pt-14 pb-8 px-5 text-center">
+        <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 text-white text-3xl font-black"
+          style={{ background: 'linear-gradient(135deg, #0ea572, #096b41)', boxShadow: '0 4px 18px rgba(14,165,114,0.30)' }}>
+          Q
         </div>
-        <h1 className="text-xl font-black">مرحباً بك في سلفة Q</h1>
-        <p className="text-blue-200 text-sm mt-2">اختر حسابك للمتابعة</p>
+        <div className="text-[20px] font-bold text-t1">سلفة Q</div>
+        <div className="text-[11px] text-t3 mt-1">نظام الادخار التناوبي الرقمي</div>
       </div>
 
-      {/* البطاقات */}
-      <div className="px-5 -mt-6 space-y-3 relative z-10">
+      {/* البطاقة */}
+      <div className="mx-4 rounded-2xl overflow-hidden"
+        style={{ background: '#ffffff', border: '1px solid rgba(14,165,114,0.15)', boxShadow: '0 2px 20px rgba(14,165,114,0.08)' }}>
 
-        {MOCK_ACCOUNTS.map(acc => (
-          <button
-            key={acc.id}
-            onClick={() => handleSelect(acc)}
-            className="w-full bg-white rounded-2xl p-4 border border-slate-200 shadow-sm
-              hover:shadow-md hover:border-primary active:scale-[0.99] transition-all text-right"
-          >
-            <div className="flex items-center gap-3">
-              {/* الأفاتار */}
-              <div className="w-12 h-12 rounded-xl bg-brand flex items-center justify-center text-white font-bold text-base shrink-0">
-                {acc.initials}
-              </div>
-
-              {/* معلومات الحساب */}
-              <div className="flex-1">
-                <p className="font-bold text-slate-800 text-sm">{acc.name}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{acc.bank}</p>
-                {acc.department && (
-                  <p className="text-xs text-slate-400">{acc.department}</p>
-                )}
-              </div>
-
-              {/* نوع الحساب + الراتب */}
-              <div className="text-left shrink-0">
-                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${acc.typeColor}`}>
-                  {acc.typeLabel}
-                </span>
-                {acc.salary > 0 ? (
-                  <p className="text-xs text-slate-500 mt-1">{formatIQD(acc.salary)}</p>
-                ) : (
-                  <p className="text-xs text-slate-400 mt-1">شخصي</p>
-                )}
-              </div>
-            </div>
-
-            {/* رقم البطاقة */}
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-              <span className="text-xs text-slate-400">ki Card:</span>
-              <span className="text-xs font-mono text-slate-600 tracking-wider" dir="ltr">
-                {acc.kiCard}
-              </span>
-            </div>
-          </button>
-        ))}
-
-        {/* تنبيه للحسابات الشخصية */}
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
-          <p className="text-xs text-amber-700">
-            ⚠️ الحساب الشخصي يتطلب كفيلاً حكومياً عند الانضمام لأي جمعية
-          </p>
+        {/* تبويبات */}
+        <div className="grid grid-cols-2 p-1 gap-1"
+          style={{ background: '#f4f9f6', borderBottom: '1px solid rgba(14,165,114,0.10)' }}>
+          {[
+            { key: 'login',    label: 'تسجيل الدخول' },
+            { key: 'register', label: 'حساب جديد'     },
+          ].map(t => (
+            <button key={t.key} onClick={() => { setTab(t.key); setError(''); }}
+              className="py-2.5 rounded-xl text-[12px] font-bold transition-all"
+              style={{
+                background: tab === t.key ? '#ffffff' : 'transparent',
+                color:      tab === t.key ? '#0ea572' : '#6b9b80',
+                boxShadow:  tab === t.key ? '0 1px 6px rgba(14,165,114,0.12)' : 'none',
+              }}>
+              {t.label}
+            </button>
+          ))}
         </div>
+
+        {/* النموذج */}
+        <form onSubmit={tab === 'login' ? handleLogin : handleRegister}
+          className="p-4 flex flex-col gap-3">
+
+          {tab === 'register' && (
+            <>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-t3">الاسم الكامل</label>
+                <input style={INPUT} placeholder="أحمد محمد علي"
+                  value={fullName} onChange={e => setFullName(e.target.value)} required />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-t3">رقم الهاتف</label>
+                <input style={INPUT} placeholder="07XXXXXXXXX" type="tel"
+                  value={phone} onChange={e => setPhone(e.target.value)} required dir="ltr" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-t3">الراتب الشهري (د.ع)</label>
+                <input style={INPUT} placeholder="1500000" type="number" min="0"
+                  value={salary} onChange={e => setSalary(e.target.value)} required dir="ltr" />
+              </div>
+            </>
+          )}
+
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] text-t3">اسم المستخدم</label>
+            <input style={INPUT} placeholder="user1"
+              value={username} onChange={e => setUsername(e.target.value)} required
+              autoComplete="username" dir="ltr" />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <label className="text-[10px] text-t3">كلمة المرور</label>
+            <input style={INPUT} placeholder="••••••••" type="password"
+              value={password} onChange={e => setPassword(e.target.value)} required
+              autoComplete={tab === 'login' ? 'current-password' : 'new-password'} dir="ltr" />
+            {tab === 'register' && (
+              <span className="text-[9px] text-t3">8 أحرف على الأقل وتحتوي على رقم</span>
+            )}
+          </div>
+
+          {error && (
+            <div className="rounded-xl px-3 py-2.5 text-[11px] font-semibold text-center"
+              style={{ background: 'rgba(224,53,53,0.07)', color: '#e03535', border: '1px solid rgba(224,53,53,0.18)' }}>
+              {error}
+            </div>
+          )}
+
+          <button type="submit" disabled={loading}
+            className="w-full py-3.5 rounded-xl text-[14px] font-bold mt-1 transition-all"
+            style={{
+              background: loading ? 'rgba(14,165,114,0.5)' : '#0d8a52',
+              color: '#fff',
+              boxShadow: loading ? 'none' : '0 2px 14px rgba(13,138,82,0.30)',
+              cursor: loading ? 'not-allowed' : 'pointer',
+            }}>
+            {loading
+              ? 'جارٍ...'
+              : tab === 'login' ? 'دخول' : 'إنشاء الحساب'}
+          </button>
+        </form>
+      </div>
+
+      <div className="text-center text-[9px] text-t3 mt-4 mb-8">
+        مدعوم بنظام Qi Card الحكومي العراقي
       </div>
     </div>
   );

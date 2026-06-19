@@ -1,14 +1,10 @@
-// استعراض السلفات المتاحة — ثيم داكن مع دورة الحياة الكاملة
+// استعراض السلفات المتاحة — بيانات حقيقية من الـ API
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '../components/BottomNav';
-import {
-  MOCK_SALAFAT, AMOUNTS, DURATIONS,
-  formatIQD, formatShort, calcInstallment,
-  seatsLeft, availablePrioritySeats,
-  getTimerRemaining, formatTimeRemaining, getDisplaySalafat,
-} from '../data/constants';
+import { getGroups, mapGroup } from '../api/groups';
+import { formatIQD, formatShort, calcInstallment, seatsLeft, MONTHS_AR } from '../data/constants';
 
 // ─── بطاقة سلفة واحدة ────────────────────────────────────────────────────────
 function SalfaCard({ salafa, onSelect }) {
@@ -22,176 +18,143 @@ function SalfaCard({ salafa, onSelect }) {
       onClick={() => !full && onSelect(salafa.id)}
       className="rounded-2xl p-4 flex flex-col gap-3 transition-all active:scale-[0.99]"
       style={{
-        background: '#1a2820',
-        border: `1px solid ${full ? 'rgba(255,90,90,0.18)' : 'rgba(63,255,162,0.12)'}`,
+        background: '#ffffff',
+        border: `1px solid ${full ? 'rgba(224,53,53,0.18)' : 'rgba(14,165,114,0.15)'}`,
         cursor: full ? 'default' : 'pointer',
       }}
     >
-      {/* المبلغ والقسط */}
       <div className="flex items-start justify-between">
         <div>
-          <div className="text-[22px] font-bold leading-none"
-            style={{ color: '#e8fff5' }}>
+          <div className="text-[22px] font-bold leading-none" style={{ color: '#0d1f17' }}>
             {formatShort(salafa.amount)}
           </div>
-          <div className="text-[10px] mt-0.5" style={{ color: '#4a7a60' }}>
+          <div className="text-[10px] mt-0.5" style={{ color: '#6b9b80' }}>
             {salafa.duration} شهراً · {salafa.duration} عضو
           </div>
         </div>
         <div className="text-left">
-          <div className="text-[14px] font-bold" style={{ color: '#3fffa2' }}>
+          <div className="text-[14px] font-bold" style={{ color: '#0ea572' }}>
             {formatIQD(inst)}
           </div>
-          <div className="text-[9px]" style={{ color: '#4a7a60' }}>/ شهر</div>
+          <div className="text-[9px]" style={{ color: '#6b9b80' }}>/ شهر</div>
         </div>
       </div>
 
-      {/* شريط تقدم الأعضاء */}
       <div>
         <div className="flex justify-between text-[10px] mb-1.5">
-          <span style={{ color: '#8ab8a0' }}>{salafa.filled} من {salafa.duration} عضو</span>
-          <span style={{ color: full ? '#ff5a5a' : pct > 75 ? '#f5c842' : '#3fffa2', fontWeight: 600 }}>
+          <span style={{ color: '#2e5c43' }}>{salafa.filled} من {salafa.duration} عضو</span>
+          <span style={{ color: full ? '#e03535' : pct > 75 ? '#d4920a' : '#0ea572', fontWeight: 600 }}>
             {full ? 'مكتملة' : `${left} مقعد متاح`}
           </span>
         </div>
         <div className="h-1.5 rounded-full overflow-hidden"
-          style={{ background: 'rgba(63,255,162,0.08)' }}>
+          style={{ background: 'rgba(14,165,114,0.10)' }}>
           <div
             className="h-1.5 rounded-full transition-all"
             style={{
               width: `${pct}%`,
               background: full
-                ? '#ff5a5a'
+                ? '#e03535'
                 : pct > 75
-                  ? 'linear-gradient(90deg, #f5c842, #ff5a5a)'
-                  : 'linear-gradient(90deg, #3fffa2, #1db874)',
+                  ? 'linear-gradient(90deg, #d4920a, #e03535)'
+                  : 'linear-gradient(90deg, #0ea572, #0d8a52)',
             }}
           />
         </div>
       </div>
 
-      {/* مؤشرات المقاعد */}
-      <div className="flex gap-1.5">
-        {salafa.priorityTaken.map((taken, i) => (
-          <div
-            key={i}
-            className="flex-1 rounded-lg py-2 text-center"
-            style={{
-              background: taken ? 'rgba(255,90,90,0.07)' : 'rgba(245,200,66,0.09)',
-              border: `1px solid ${taken ? 'rgba(255,90,90,0.18)' : 'rgba(245,200,66,0.22)'}`,
-            }}
-          >
-            <div className="text-[13px] font-bold leading-none"
-              style={{ color: taken ? '#ff5a5a80' : '#f5c842' }}>
-              {i + 1}
-            </div>
-            <div className="text-[8px] mt-0.5"
-              style={{ color: taken ? '#ff5a5a50' : '#f5c84280' }}>
-              {taken ? 'محجوز' : 'متاح'}
-            </div>
-          </div>
-        ))}
-        {/* قرعة */}
-        <div
-          className="flex-1 rounded-lg py-2 text-center"
-          style={{
-            background: full ? 'rgba(255,90,90,0.05)' : 'rgba(63,255,162,0.06)',
-            border: `1px solid ${full ? 'rgba(255,90,90,0.1)' : 'rgba(63,255,162,0.15)'}`,
-          }}
-        >
-          <div className="text-[13px] leading-none"
-            style={{ color: full ? '#ff5a5a40' : '#3fffa2' }}>
-            🎲
-          </div>
-          <div className="text-[8px] mt-0.5" style={{ color: '#4a7a60' }}>
-            {full ? 'محجوز' : 'قرعة'}
-          </div>
-        </div>
-      </div>
-
-      {/* تذييل */}
       <div className="flex items-center justify-between text-[10px]"
-        style={{ borderTop: '1px solid rgba(63,255,162,0.06)', paddingTop: '8px' }}>
-        <span style={{ color: '#4a7a60' }}>البداية: {salafa.startDate}</span>
+        style={{ borderTop: '1px solid rgba(14,165,114,0.08)', paddingTop: '8px' }}>
+        <span style={{ color: '#6b9b80' }}>
+          {(() => {
+            let d;
+            if (salafa.startDate) {
+              d = new Date(salafa.startDate + '-01');
+              return `تبدأ: ${MONTHS_AR[d.getMonth()]} ${d.getFullYear()}`;
+            }
+            d = new Date(); d.setDate(1); d.setMonth(d.getMonth() + 1);
+            return `تبدأ تقريباً: ${MONTHS_AR[d.getMonth()]} ${d.getFullYear()}`;
+          })()}
+        </span>
         {!full && (
-          <span style={{ color: '#3fffa2', fontWeight: 700 }}>انضم الآن ←</span>
+          <span style={{ color: '#0ea572', fontWeight: 700 }}>انضم الآن ←</span>
         )}
       </div>
     </div>
   );
 }
 
-// ─── الصفحة الرئيسية ──────────────────────────────────────────────────────────
+// ─── Skeleton بطاقة ──────────────────────────────────────────────────────────
+function SkeletonCard() {
+  return (
+    <div className="rounded-2xl p-4 flex flex-col gap-3 animate-pulse"
+      style={{ background: '#ffffff', border: '1px solid rgba(14,165,114,0.08)' }}>
+      <div className="flex justify-between">
+        <div className="h-6 w-24 rounded-lg" style={{ background: 'rgba(14,165,114,0.08)' }} />
+        <div className="h-6 w-16 rounded-lg" style={{ background: 'rgba(14,165,114,0.08)' }} />
+      </div>
+      <div className="h-2 rounded-full" style={{ background: 'rgba(14,165,114,0.08)' }} />
+      <div className="h-8 rounded-lg" style={{ background: 'rgba(14,165,114,0.05)' }} />
+    </div>
+  );
+}
+
+// ─── الصفحة ───────────────────────────────────────────────────────────────────
 export default function Browse() {
-  const navigate  = useNavigate();
-  const [filter,  setFilter]  = useState('');  // '' | amount | duration
-  const [timerKey, setTimerKey] = useState(0);
+  const navigate = useNavigate();
+  const [groups,  setGroups]  = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState(null);
 
-  // تحديث المؤقت كل دقيقة
   useEffect(() => {
-    const id = setInterval(() => setTimerKey(k => k + 1), 60_000);
-    return () => clearInterval(id);
+    getGroups()
+      .then(data => setGroups(data.map(mapGroup)))
+      .catch(e  => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
-
-  const displaySalafat = useMemo(() => getDisplaySalafat(MOCK_SALAFAT), []);
-
-  // السلفات المكتملة ذات المؤقت النشط
-  const completedWithTimer = useMemo(() => {
-    return MOCK_SALAFAT
-      .filter(s => s.status === 'completed' && s.completedAt)
-      .map(s => ({ ...s, minsLeft: getTimerRemaining(s.completedAt) }))
-      .filter(s => s.minsLeft > 0);
-  }, [timerKey]);
 
   return (
     <div className="bg-bg min-h-screen flex flex-col page-enter">
       <div className="flex-1 overflow-y-auto p-3 pb-24 flex flex-col gap-3">
 
-        {/* رأس الصفحة */}
         <div className="pt-2">
           <div className="text-[17px] font-bold text-t1">استعرض السلفات</div>
           <div className="text-[10px] text-t3 mt-0.5">
-            {displaySalafat.length} سلفة مفتوحة الآن
+            {loading ? 'جارٍ التحميل...' : `${groups.length} سلفة مفتوحة الآن`}
           </div>
         </div>
 
-        {/* ─── بانر المؤقت ─── */}
-        {completedWithTimer.length > 0 && (
-          <div className="rounded-2xl p-4 flex flex-col gap-2"
-            style={{ background: '#1f3028', border: '1px solid rgba(245,200,66,0.25)' }}>
-            <div className="flex items-center gap-2">
-              <span className="text-[18px]">⏱</span>
-              <div>
-                <div className="text-[12px] font-bold" style={{ color: '#f5c842' }}>
-                  سلفات جديدة قادمة
-                </div>
-                <div className="text-[9px] text-t3">
-                  ستُفتح تلقائياً — سارع لتحجز مقعد الأولوية
-                </div>
-              </div>
-            </div>
-            {completedWithTimer.map(s => (
-              <div key={s.id}
-                className="flex items-center justify-between rounded-xl px-3 py-2"
-                style={{ background: 'rgba(245,200,66,0.06)', border: '1px solid rgba(245,200,66,0.12)' }}>
-                <div>
-                  <span className="text-[11px] font-bold text-t1">
-                    {formatShort(s.amount)}
-                  </span>
-                  <span className="text-[10px] text-t3 mr-1.5">
-                    · {s.duration} شهر
-                  </span>
-                </div>
-                <span className="text-[13px] font-bold" style={{ color: '#f5c842' }}>
-                  {formatTimeRemaining(s.minsLeft)}
-                </span>
-              </div>
-            ))}
+        {loading && (
+          <>
+            <SkeletonCard />
+            <SkeletonCard />
+            <SkeletonCard />
+          </>
+        )}
+
+        {error && (
+          <div className="rounded-xl p-4 text-center"
+            style={{ background: 'rgba(224,53,53,0.05)', border: '1px solid rgba(224,53,53,0.18)' }}>
+            <div className="text-[12px] font-bold" style={{ color: '#e03535' }}>فشل تحميل السلفات</div>
+            <div className="text-[10px] text-t3 mt-1">{error}</div>
+            <button onClick={() => { setError(null); setLoading(true); getGroups().then(d => setGroups(d.map(mapGroup))).catch(e => setError(e.message)).finally(() => setLoading(false)); }}
+              className="mt-2 text-[11px] font-bold px-3 py-1.5 rounded-lg"
+              style={{ background: '#0d8a52', color: '#fff' }}>
+              إعادة المحاولة
+            </button>
           </div>
         )}
 
-        {/* ─── قائمة السلفات ─── */}
-        {displaySalafat.map(s => (
+        {!loading && !error && groups.length === 0 && (
+          <div className="rounded-2xl p-8 text-center"
+            style={{ background: '#ffffff', border: '1px solid rgba(14,165,114,0.10)' }}>
+            <div className="text-[40px] mb-3">📋</div>
+            <div className="text-[13px] font-bold text-t2">لا توجد سلفات مفتوحة حالياً</div>
+            <div className="text-[10px] text-t3 mt-1">تحقق لاحقاً عند فتح مجموعات جديدة</div>
+          </div>
+        )}
+
+        {groups.map(s => (
           <SalfaCard
             key={s.id}
             salafa={s}

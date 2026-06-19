@@ -11,7 +11,6 @@ export default function AmountGrid() {
   function handleClick(amt) {
     const { status, minDuration } = getAmountStatus(amt, maxInstallment);
     if (status === 'locked') return;
-    // إذا احتاج مدة أطول → بدّل المدة تلقائياً
     if (status === 'needs_longer' && minDuration > duration) {
       setDuration(minDuration);
     }
@@ -27,25 +26,24 @@ export default function AmountGrid() {
         const isLock  = status === 'locked';
         const isWarn  = status === 'needs_longer' && minDuration > duration;
 
-        // آخر عنصر يأخذ العرض الكامل إذا كان العدد فردياً
         const fullRow = idx === AMOUNTS.length - 1 && AMOUNTS.length % 2 !== 0;
 
-        let borderColor = 'rgba(63,255,162,0.12)';
-        if (isOn)   borderColor = '#1db874';
-        if (isWarn) borderColor = 'rgba(245,200,66,0.35)';
+        let borderColor = 'rgba(14,165,114,0.15)';
+        if (isOn)   borderColor = '#0d8a52';
+        if (isWarn) borderColor = 'rgba(212,146,10,0.40)';
 
-        let bg = '#1a2820';
-        if (isOn)   bg = 'rgba(29,184,116,0.09)';
-        if (isLock) bg = '#1a2820';
+        let bg = '#ffffff';
+        if (isOn)   bg = 'rgba(13,138,82,0.08)';
+        if (isLock) bg = '#f0f7f3';
 
-        let amtColor = '#e8fff5';
-        if (isOn)   amtColor = '#3fffa2';
-        if (isLock) amtColor = '#4a7a60';
+        let amtColor = '#0d1f17';
+        if (isOn)   amtColor = '#0ea572';
+        if (isLock) amtColor = '#6b9b80';
 
-        let subColor = '#4a7a60';
-        if (isOn)   subColor = '#1db874';
-        if (isWarn) subColor = '#f5c842';
-        if (isLock) subColor = '#ff5a5a';
+        let subColor = '#6b9b80';
+        if (isOn)   subColor = '#0d8a52';
+        if (isWarn) subColor = '#d4920a';
+        if (isLock) subColor = '#e03535';
 
         let subText;
         if (isLock)  subText = 'مقفول 🔒';
@@ -60,10 +58,10 @@ export default function AmountGrid() {
             style={{
               background:  bg,
               borderColor,
-              opacity:     isLock ? 0.35 : 1,
+              opacity:     isLock ? 0.45 : 1,
               cursor:      isLock ? 'not-allowed' : 'pointer',
               gridColumn:  fullRow ? 'span 2' : undefined,
-              boxShadow:   isOn ? '0 0 8px rgba(29,184,116,0.12)' : 'none',
+              boxShadow:   isOn ? '0 2px 8px rgba(13,138,82,0.12)' : 'none',
             }}
           >
             <div className="font-bold text-[14px]" style={{ color: amtColor }}>

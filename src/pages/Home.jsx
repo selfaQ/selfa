@@ -1,4 +1,4 @@
-// الصفحة الرئيسية / صفحة التسويق — شرح الفكرة وكيفية الاستخدام
+﻿// الصفحة الرئيسية / صفحة التسويق — شرح الفكرة وكيفية الاستخدام
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -6,7 +6,7 @@ import { AMOUNTS, DURATIONS, calcInstallment, formatIQD, formatShort, isLocked }
 
 // ─── قسم: كيف يعمل النظام (4 خطوات) ────────────────────────────────────────
 const STEPS = [
-  { icon: '📱', title: 'افتح التطبيق', desc: 'سجّل دخولك ببطاقة ki Card الخاصة بك' },
+  { icon: '📱', title: 'افتح التطبيق', desc: 'سجّل دخولك ببطاقة Qi Card الخاصة بك' },
   { icon: '🎯', title: 'اختر جمعيتك',  desc: 'حدد المبلغ والمدة التي تناسب راتبك' },
   { icon: '🪑', title: 'احجز مقعدك',   desc: 'اختر مقعداً بأولوية أو شارك بالقرعة مجاناً' },
   { icon: '💰', title: 'استلم تلقائياً', desc: 'يُخصم قسطك من الراتب ويُضاف مبلغك في موعده' },
@@ -52,7 +52,7 @@ export default function Home() {
 
         <div className="relative z-10">
           <span className="inline-block bg-white/20 text-white text-xs font-semibold px-3 py-1 rounded-full mb-4">
-            🇮🇶 داخل تطبيق ki Card
+            🇮🇶 داخل تطبيق Qi Card
           </span>
           <h1 className="text-3xl font-black leading-snug mb-3">
             الجمعية الذكية<br />بدون تعقيد
@@ -203,7 +203,7 @@ export default function Home() {
             to="/login"
             className="inline-block bg-brand text-white font-bold px-8 py-3 rounded-xl hover:opacity-90 transition"
           >
-            سجّل الدخول ببطاقة ki Card
+            سجّل الدخول ببطاقة Qi Card
           </Link>
         </div>
       </section>

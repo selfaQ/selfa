@@ -1,4 +1,4 @@
-// سياق المصادقة — يخزن بيانات الحساب المختار ويتيحها لجميع المكونات
+﻿// سياق المصادقة — يخزن بيانات الحساب المختار ويتيحها لجميع المكونات
 
 import { createContext, useContext, useState } from 'react';
 
@@ -9,7 +9,7 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null); // null = غير مسجل
 
-  /** تسجيل الدخول باختيار حساب ki Card */
+  /** تسجيل الدخول باختيار حساب Qi Card */
   function login(account) {
     setUser(account);
   }

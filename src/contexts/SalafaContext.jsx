@@ -1,73 +1,73 @@
-// سياق السلفات — يخزن جمعيات المستخدم النشطة والإشعارات
+// سياق السلفات — يجلب جمعيات المستخدم من الـ API
 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { getMyLoans, mapLoan } from '../api/loans';
+import { confirmLottery as confirmLotteryApi } from '../api/groups';
 import { MOCK_NOTIFICATIONS } from '../data/constants';
 
 const SalafaContext = createContext(null);
 
 export function SalafaProvider({ children }) {
-  // الجمعيات النشطة للمستخدم الحالي
-  const [mySalafat, setMySalafat] = useState([
-    // جمعية نشطة تجريبية للعرض
-    {
-      id: 101,
-      amount: 5_000_000,
-      duration: 10,
-      myTurn: 3,
-      monthsPaid: 2,
-      nextDeduction: '2025-05-01',
-      seatType: 'priority',
-      prioritySeat: 1,
-      joinedAt: '2025-03-01',
-    },
-  ]);
-
-  // الإشعارات
+  const [mySalafat,   setMySalafat]   = useState([]);
+  const [loadingLoans, setLoadingLoans] = useState(true);
   const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
 
-  // عدد الإشعارات غير المقروءة
+  async function refreshLoans() {
+    setLoadingLoans(true);
+    try {
+      const loans = await getMyLoans();
+      setMySalafat(loans.map(mapLoan));
+    } catch (e) {
+      console.error('loans fetch failed:', e);
+    } finally {
+      setLoadingLoans(false);
+    }
+  }
+
+  useEffect(() => {
+    try {
+      const { token } = JSON.parse(localStorage.getItem('qi_auth') ?? '{}');
+      if (token) { refreshLoans(); return; }
+    } catch {}
+    setLoadingLoans(false);
+  }, []);
+
   const unreadCount = notifications.filter(n => !n.read).length;
 
-  /** الانضمام لجمعية جديدة */
-  function joinSalafa(salafa) {
-    const newEntry = {
-      id: Date.now(),
-      amount:        salafa.amount,
-      duration:      salafa.duration,
-      myTurn:        salafa.selectedTurn ?? Math.floor(Math.random() * salafa.duration) + 1,
-      monthsPaid:    0,
-      nextDeduction: salafa.startDate ?? '2025-06-01',
-      seatType:      salafa.seatType ?? 'lottery',
-      prioritySeat:  salafa.prioritySeat ?? null,
-      joinedAt:      new Date().toISOString().slice(0, 10),
-    };
-    setMySalafat(prev => [...prev, newEntry]);
-
-    // إضافة إشعار تأكيد
+  function addJoinNotification(amount) {
     setNotifications(prev => [{
-      id: Date.now(),
-      type: 'turn',
+      id:    Date.now(),
+      type:  'turn',
       title: 'تم الانضمام بنجاح',
-      body: `انضممت لجمعية ${salafa.amount.toLocaleString('ar-IQ')} د.ع — دورك الشهر ${newEntry.myTurn}`,
-      time: 'الآن',
-      read: false,
+      body:  `انضممت لجمعية ${amount.toLocaleString('ar-IQ')} د.ع — القرعة ستُجرى قريباً`,
+      time:  'الآن',
+      read:  false,
     }, ...prev]);
   }
 
-  /** تحديد إشعار كمقروء */
   function markRead(id) {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   }
 
-  /** تحديد جميع الإشعارات كمقروءة */
   function markAllRead() {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   }
 
+  async function confirmLottery(groupId) {
+    await confirmLotteryApi(groupId);
+    await refreshLoans();
+    setNotifications(prev => [{
+      id: Date.now(), type: 'success',
+      title: 'تم تأكيد دورك', body: 'تم تأكيد مشاركتك في السلفة بنجاح',
+      time: 'الآن', read: false,
+    }, ...prev]);
+  }
+
   return (
     <SalafaContext.Provider value={{
-      mySalafat, notifications, unreadCount,
-      joinSalafa, markRead, markAllRead,
+      mySalafat, loadingLoans, notifications, unreadCount,
+      refreshLoans, addJoinNotification, markRead, markAllRead,
+      confirmLottery,
     }}>
       {children}
     </SalafaContext.Provider>
